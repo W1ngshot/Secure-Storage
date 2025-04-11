@@ -1,4 +1,6 @@
+using System.Text;
 using SecureStorage.Domain.Persistence;
+using SecureStorage.Domain.Security;
 using SecureStorage.Infrastructure.ServiceExtensions;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddRocksDbStorage(builder.Configuration);
+builder.Services.AddSecurityServices();
 
 var app = builder.Build();
 
@@ -54,4 +57,38 @@ app.MapPost("/transaction", (IKeyValueStorage storage) =>
     return Results.Ok("Transaction committed");
 });
 
+app.MapPost("/encrypt", (
+    EncryptRequest req,
+    IEncryptionService encryption) =>
+{
+    var key = Convert.FromBase64String(req.Base64Key);
+    var plainBytes = Encoding.UTF8.GetBytes(req.PlainText);
+    var encrypted = encryption.Encrypt(plainBytes, key);
+    return Results.Ok(Convert.ToBase64String(encrypted));
+});
+
+app.MapPost("/decrypt", (
+    DecryptRequest req,
+    IEncryptionService encryption) =>
+{
+    var key = Convert.FromBase64String(req.Base64Key);
+    var cipherBytes = Convert.FromBase64String(req.Base64CipherText);
+    var decrypted = encryption.Decrypt(cipherBytes, key);
+    return Results.Ok(Encoding.UTF8.GetString(decrypted));
+});
+
+app.MapPost("/kdf", (
+    KdfRequest req,
+    IKdfService kdf) =>
+{
+    var salt = Convert.FromBase64String(req.Base64Salt);
+    var derivedKey = kdf.DeriveKey(req.Password, salt);
+    return Results.Ok(Convert.ToBase64String(derivedKey));
+});
+
 app.Run();
+
+public record EncryptRequest(string PlainText, string Base64Key);
+public record DecryptRequest(string Base64CipherText, string Base64Key);
+
+public record KdfRequest(string Password, string Base64Salt);
