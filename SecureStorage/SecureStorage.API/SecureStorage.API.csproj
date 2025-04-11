@@ -11,4 +11,10 @@
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\SecureStorage.Core\SecureStorage.Core.csproj" />
+      <ProjectReference Include="..\SecureStorage.Domain\SecureStorage.Domain.csproj" />
+      <ProjectReference Include="..\SecureStorage.Infrastructure\SecureStorage.Infrastructure.csproj" />
+    </ItemGroup>
+
 </Project>

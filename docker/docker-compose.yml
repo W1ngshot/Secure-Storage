@@ -1,0 +1,12 @@
+services:
+  securestorage:
+    build: .
+    ports:
+      - "5000:80"
+    volumes:
+      - rocksdb-data:/data
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+
+volumes:
+  rocksdb-data:

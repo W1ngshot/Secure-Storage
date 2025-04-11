@@ -20,6 +20,7 @@
 **/.idea/**/*.iml
 **/.idea/**/contentModel.xml
 **/.idea/**/modules.xml
+*.DotSettings.user
 
 *.suo
 .vs/
@@ -59,3 +60,9 @@ yarn-error.log
 !.vscode/launch.json
 !.vscode/extensions.json
 .history/*
+
+# Ignore all files in the rocksdb data
+/SecureStorage/data/rocksdb/*
+
+# But not README.md file
+!/SecureStorage/data/rocksdb/README.md
