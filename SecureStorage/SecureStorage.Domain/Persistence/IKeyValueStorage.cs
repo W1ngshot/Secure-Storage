@@ -7,4 +7,5 @@ public interface IKeyValueStorage : IDisposable
     Task PutAsync(string key, string value);
     Task PutBatchAsync(Dictionary<string, string> batch);
     IStorageTransaction BeginTransaction();
+    IEnumerable<(string Key, string Value)> DumpAll();
 }

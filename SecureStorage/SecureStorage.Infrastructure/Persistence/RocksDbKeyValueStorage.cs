@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Options;
+﻿using System.Text;
+using Microsoft.Extensions.Options;
 using RocksDbSharp;
 using SecureStorage.Domain.Persistence;
 using SecureStorage.Infrastructure.Options;
@@ -43,6 +44,22 @@ public class RocksDbKeyValueStorage : IKeyValueStorage
 
         _db.Write(b);
         return Task.CompletedTask;
+    }
+
+
+    public IEnumerable<(string Key, string Value)> DumpAll()
+    {
+        using var it = _db.NewIterator();
+        it.SeekToFirst();
+
+        while (it.Valid())
+        {
+            yield return (
+                Encoding.UTF8.GetString(it.Key()),
+                Encoding.UTF8.GetString(it.Value())
+            );
+            it.Next();
+        }
     }
 
     public IStorageTransaction BeginTransaction() => new StorageTransaction(_db.BeginTransaction());

@@ -10,7 +10,7 @@ public static class SecurityServicesRegistrationExtensions
     {
         services.AddSingleton<IEncryptionService, AesEncryptionService>();
         services.AddSingleton<IKdfService, Pbkdf2KdfService>();
-        
+        services.AddSingleton<IKeyGenerator, KeyGenerator>();
         return services;
     }
 }

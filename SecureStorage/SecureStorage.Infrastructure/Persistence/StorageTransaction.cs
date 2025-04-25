@@ -9,10 +9,13 @@ public class StorageTransaction(Transaction txn) : IStorageTransaction
 
     public Dictionary<string, string?> GetBatch(IEnumerable<string> keys)
     {
-        var keyArray = keys.ToArray();
-        var values = txn.MultiGet(keyArray)?.ToDictionary(k => k.Key, v => v.Value);
+        var values = new Dictionary<string, string?>();
+        foreach (var key in keys)
+        {
+            values[key] = txn.Get(key);
+        }
 
-        return keyArray.ToDictionary(key => key, key => values?.GetValueOrDefault(key));
+        return values;
     }
 
     public void Put(string key, string value) => txn.Put(key, value);

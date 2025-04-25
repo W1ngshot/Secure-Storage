@@ -1,4 +1,5 @@
 ﻿using System.Security.Cryptography;
+using System.Text;
 using SecureStorage.Domain.Security;
 
 namespace SecureStorage.Infrastructure.Security;
@@ -8,6 +9,34 @@ public class Pbkdf2KdfService : IKdfService
     public byte[] DeriveKey(string password, byte[] salt, int keySize = 32)
     {
         using var pbkdf2 = new Rfc2898DeriveBytes(password, salt, 100_000, HashAlgorithmName.SHA256);
+        return pbkdf2.GetBytes(keySize);
+    }
+
+    public byte[] DeriveUserKey(byte[] key, string userId)
+    {
+        using var hmac = new HMACSHA256(key);
+        return hmac.ComputeHash(Encoding.UTF8.GetBytes(userId));
+    }
+
+    public byte[] DeriveCompositeKey(byte[] key, byte[] secret, int keySize = 32)
+    {
+        using var hmac = new HMACSHA256(key);
+        var salt = hmac.ComputeHash(secret);
+
+        var pass = Convert.ToBase64String(secret);
+
+        using var pbkdf2 = new Rfc2898DeriveBytes(pass, salt, 100_000, HashAlgorithmName.SHA256);
+        return pbkdf2.GetBytes(keySize);
+    }
+
+    public byte[] DeriveCompositeKey(byte[] key, byte[] secret, string password, int keySize = 32)
+    {
+        using var hmac = new HMACSHA256(key);
+        var salt = hmac.ComputeHash(secret);
+
+        var pass = password + Convert.ToBase64String(secret);
+
+        using var pbkdf2 = new Rfc2898DeriveBytes(pass, salt, 100_000, HashAlgorithmName.SHA256);
         return pbkdf2.GetBytes(keySize);
     }
 }
