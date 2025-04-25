@@ -29,6 +29,7 @@ public class GetFieldsQueryHandler(
         var entity = encryption.TryDecrypt<SecureUser>(data, level1Key);
         if (entity is null) throw new Exception("Invalid entity data"); //TODO abort
 
+        //TODO change last accessed at
         var level1Keys = query.Fields
             .Where(f => entity.Level1Fields.ContainsKey(f))
             .ToDictionary(f => entity.Level1Fields[f], f => f);

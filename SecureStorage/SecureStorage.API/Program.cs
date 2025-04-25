@@ -1,5 +1,6 @@
 using FastEndpoints;
 using Microsoft.AspNetCore.Mvc;
+using SecureStorage.Core.Features.ChangePassword;
 using SecureStorage.Core.Features.CreateUser;
 using SecureStorage.Core.Features.GetFields;
 using SecureStorage.Core.Features.UpdateUser;
@@ -19,6 +20,7 @@ builder.Services.AddFastEndpoints();
 builder.Services.AddScoped<CreateUserCommandHandler>();
 builder.Services.AddScoped<GetFieldsQueryHandler>();
 builder.Services.AddScoped<UpdateUserCommandHandler>();
+builder.Services.AddScoped<ChangePasswordCommandHandler>();
 
 var app = builder.Build();
 

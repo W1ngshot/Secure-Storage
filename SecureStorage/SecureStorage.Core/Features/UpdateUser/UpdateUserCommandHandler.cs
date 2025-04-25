@@ -37,7 +37,7 @@ public class UpdateUserCommandHandler(
         var level1NewFieldValues = command.Level1Updates
             .ExceptBy(level1UpdatedFieldValues.Select(f => f.Key), f => f.Key)
             .ToEncryptedList(keyGenerator, encryption, level1FieldsKey);
-
+        //TODO change last accessed at
         entity.Level1Fields.AddRange(level1NewFieldValues
             .Select(f => new KeyValuePair<string, string>(f.Key, f.StorageKey)));
 
