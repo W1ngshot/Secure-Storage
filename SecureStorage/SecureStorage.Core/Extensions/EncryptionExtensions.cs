@@ -1,4 +1,6 @@
-﻿using SecureStorage.Domain.Security;
+﻿using SecureStorage.Domain.Exceptions;
+using SecureStorage.Domain.Persistence;
+using SecureStorage.Domain.Security;
 
 namespace SecureStorage.Core.Extensions;
 
@@ -29,5 +31,26 @@ public static class EncryptionExtensions
                 field.StorageKey,
                 Data: encryption.Encrypt(field.NewData, levelKey)))
             .ToList();
+    }
+
+    public static T GetAndDecryptOrThrow<T>(
+        this IStorageTransaction transaction,
+        string key,
+        IEncryptionService encryption,
+        byte[] decryptKey)
+    {
+        var data = transaction.Get(key);
+        if (data is null)
+        {
+            transaction.Rollback();
+            throw new NotFoundException(nameof(T));
+        }
+
+        var entity = encryption.TryDecrypt<T>(data, decryptKey);
+        if (entity is not null)
+            return entity;
+
+        transaction.Rollback();
+        throw new CorruptedEntityException();
     }
 }

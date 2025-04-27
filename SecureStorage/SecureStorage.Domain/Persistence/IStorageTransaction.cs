@@ -7,5 +7,6 @@ public interface IStorageTransaction : IDisposable
     void Put(string key, string value);
     void PutBatch(Dictionary<string, string> batch);
     void Delete(string key);
+    void Rollback();
     void Commit();
 }

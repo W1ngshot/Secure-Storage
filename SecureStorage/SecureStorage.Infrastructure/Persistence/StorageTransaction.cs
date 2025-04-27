@@ -27,6 +27,7 @@ public class StorageTransaction(Transaction txn) : IStorageTransaction
     }
 
     public void Delete(string key) => txn.Remove(key);
+    public void Rollback() => txn.Rollback();
 
     public void Commit() => txn.Commit();
 

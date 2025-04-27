@@ -23,11 +23,10 @@ public class ResetPasswordCommandHandler(
 
         using var transaction = storage.BeginTransaction();
 
-        var data = transaction.Get(entityStorageKey);
-        if (data is null) throw new Exception("User not found"); //TODO abort
-
-        var entity = encryption.TryDecrypt<SecureUser>(data, level1Key);
-        if (entity is null) throw new Exception("Invalid entity data"); //TODO abort
+        var entity = transaction.GetAndDecryptOrThrow<SecureUser>(
+            entityStorageKey,
+            encryption,
+            level1Key);
 
         var newLevel2Key = kdf.DeriveCompositeKey(vaultKey, entity.Secret.ToBytes(), command.NewPassword);
         var newLevel2 = new Level2
@@ -38,6 +37,8 @@ public class ResetPasswordCommandHandler(
 
         entity.EncryptedLevel2 = encryption.Encrypt(newLevel2, newLevel2Key);
         entity.LastAccessedAt = dateTimeProvider.UtcNow;
+        entity.LockUntil = null;
+        entity.FailedAttempts = 0;
 
         var encryptedLevel1 = encryption.Encrypt(entity, level1Key);
 

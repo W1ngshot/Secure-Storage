@@ -2,6 +2,7 @@
 using SecureStorage.Domain.Entities;
 using SecureStorage.Domain.Persistence;
 using SecureStorage.Domain.Security;
+using SecureStorage.Domain.Utility;
 using SecureStorage.Domain.Vault;
 
 namespace SecureStorage.Core.Features.UpdateUser;
@@ -11,21 +12,22 @@ public class UpdateUserCommandHandler(
     IEncryptionService encryption,
     IKdfService kdf,
     IKeyGenerator keyGenerator,
-    IKeyVault vault)
+    IKeyVault vault,
+    IDateTimeProvider dateTimeProvider)
 {
     public async Task HandleAsync(UpdateUserCommand command)
     {
         var vaultKey = await vault.GetKeyForUserAsync(command.UserId);
-        var entityKey = keyGenerator.GenerateKeyFromUserId(vaultKey, command.UserId);
+        var entityStorageKey = keyGenerator.GenerateKeyFromUserId(vaultKey, command.UserId);
         var level1Key = kdf.DeriveUserKey(vaultKey, command.UserId);
 
         using var transaction = storage.BeginTransaction();
 
-        var data = transaction.Get(entityKey);
-        if (data is null) throw new Exception("User not found"); //TODO abort
-
-        var entity = encryption.TryDecrypt<SecureUser>(data, level1Key);
-        if (entity is null) throw new Exception("Invalid entity data"); //TODO abort
+        var entity = transaction.GetAndDecryptOrThrow<SecureUser>(
+            entityStorageKey,
+            encryption,
+            level1Key);
+        entity.LastAccessedAt = dateTimeProvider.UtcNow;
 
         var level1FieldsKey = kdf.DeriveCompositeKey(vaultKey, entity.Secret.ToBytes());
 
@@ -37,7 +39,7 @@ public class UpdateUserCommandHandler(
         var level1NewFieldValues = command.Level1Updates
             .ExceptBy(level1UpdatedFieldValues.Select(f => f.Key), f => f.Key)
             .ToEncryptedList(keyGenerator, encryption, level1FieldsKey);
-        //TODO change last accessed at
+
         entity.Level1Fields.AddRange(level1NewFieldValues
             .Select(f => new KeyValuePair<string, string>(f.Key, f.StorageKey)));
 
@@ -48,7 +50,7 @@ public class UpdateUserCommandHandler(
             var level1Batch = level1UpdatedFieldValues
                 .Concat(level1NewFieldValues)
                 .Select(x => new KeyValuePair<string, string>(x.StorageKey, x.Data))
-                .Append(new KeyValuePair<string, string>(entityKey, encryptedEntity))
+                .Append(new KeyValuePair<string, string>(entityStorageKey, encryptedEntity))
                 .ToDictionary();
 
             transaction.PutBatch(level1Batch);
@@ -56,9 +58,16 @@ public class UpdateUserCommandHandler(
             return;
         }
 
+        entity.EnsureNotLockedOrThrow(transaction, dateTimeProvider);
+        
         var level2Key = kdf.DeriveCompositeKey(vaultKey, entity.Secret.ToBytes(), command.Password);
-        var level2 = encryption.TryDecrypt<Level2>(entity.EncryptedLevel2, level2Key);
-        if (level2 is null) throw new Exception("Invalid password"); //TODO abort
+        var level2 = entity.DecryptLevel2OrThrow<Level2>(
+            entityStorageKey,
+            level1Key,
+            level2Key,
+            encryption,
+            transaction,
+            dateTimeProvider);
 
         var level2FieldsKey = kdf.DeriveCompositeKey(vaultKey, level2.Secret.ToBytes(), command.Password);
 
@@ -86,7 +95,7 @@ public class UpdateUserCommandHandler(
             .Concat(level2UpdatedFieldValues)
             .Concat(level2NewFieldValues)
             .Select(x => new KeyValuePair<string, string>(x.StorageKey, x.Data))
-            .Append(new KeyValuePair<string, string>(entityKey, encryptedLevel1))
+            .Append(new KeyValuePair<string, string>(entityStorageKey, encryptedLevel1))
             .ToDictionary();
 
         transaction.PutBatch(batch);

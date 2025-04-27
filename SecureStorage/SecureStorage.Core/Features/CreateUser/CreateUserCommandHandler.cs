@@ -42,6 +42,8 @@ public class CreateUserCommandHandler(
             UserId = command.UserId,
             CreatedAt = dateTimeProvider.UtcNow,
             LastAccessedAt = null,
+            FailedAttempts = 0,
+            LockUntil = null,
             Secret = level1Secret,
             Level1Fields = level1FieldValues.ToDictionary(x => x.Key, x => x.StorageKey),
             EncryptedLevel2 = encryption.Encrypt(level2, level2Key),

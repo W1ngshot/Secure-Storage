@@ -2,6 +2,7 @@
 using SecureStorage.Domain.Entities;
 using SecureStorage.Domain.Persistence;
 using SecureStorage.Domain.Security;
+using SecureStorage.Domain.Utility;
 using SecureStorage.Domain.Vault;
 
 namespace SecureStorage.Core.Features.GetFields;
@@ -11,25 +12,25 @@ public class GetFieldsQueryHandler(
     IEncryptionService encryption,
     IKdfService kdf,
     IKeyGenerator keyGenerator,
-    IKeyVault vault)
+    IKeyVault vault,
+    IDateTimeProvider dateTimeProvider)
 {
     public async Task<Dictionary<string, string?>> HandleAsync(GetFieldsQuery query)
     {
         var vaultKey = await vault.GetKeyForUserAsync(query.UserId);
-        var entityKey = keyGenerator.GenerateKeyFromUserId(vaultKey, query.UserId);
+        var entityStorageKey = keyGenerator.GenerateKeyFromUserId(vaultKey, query.UserId);
         var level1Key = kdf.DeriveUserKey(vaultKey, query.UserId);
 
         var result = query.Fields.ToDictionary(x => x, _ => default(string));
 
         using var transaction = storage.BeginTransaction();
 
-        var data = transaction.Get(entityKey);
-        if (data is null) throw new Exception("User not found"); //TODO abort
-
-        var entity = encryption.TryDecrypt<SecureUser>(data, level1Key);
-        if (entity is null) throw new Exception("Invalid entity data"); //TODO abort
-
-        //TODO change last accessed at
+        var entity = transaction.GetAndDecryptOrThrow<SecureUser>(
+            entityStorageKey,
+            encryption,
+            level1Key);
+        entity.LastAccessedAt = dateTimeProvider.UtcNow;
+        
         var level1Keys = query.Fields
             .Where(f => entity.Level1Fields.ContainsKey(f))
             .ToDictionary(f => entity.Level1Fields[f], f => f);
@@ -52,10 +53,16 @@ public class GetFieldsQueryHandler(
         if (query.Password is null || level2KeysQuery.Count <= 0)
             return result;
 
+        entity.EnsureNotLockedOrThrow(transaction, dateTimeProvider);
+        
         var level2Key = kdf.DeriveCompositeKey(vaultKey, entity.Secret.ToBytes(), query.Password);
-        var level2 = encryption.TryDecrypt<Level2>(entity.EncryptedLevel2, level2Key);
-
-        if (level2 is null) throw new Exception("Invalid password"); //TODO abort
+        var level2 = entity.DecryptLevel2OrThrow<Level2>(
+            entityStorageKey,
+            level1Key,
+            level2Key,
+            encryption,
+            transaction,
+            dateTimeProvider);
 
         var level2Keys = level2KeysQuery
             .Where(f => level2.Level2Fields.ContainsKey(f))

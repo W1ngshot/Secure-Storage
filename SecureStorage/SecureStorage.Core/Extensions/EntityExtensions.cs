@@ -1,0 +1,52 @@
+﻿using SecureStorage.Domain.Entities;
+using SecureStorage.Domain.Exceptions;
+using SecureStorage.Domain.Persistence;
+using SecureStorage.Domain.Security;
+using SecureStorage.Domain.Utility;
+
+namespace SecureStorage.Core.Extensions;
+
+public static class EntityExtensions
+{
+    public static void EnsureNotLockedOrThrow(
+        this SecureUser entity,
+        IStorageTransaction transaction,
+        IDateTimeProvider dateTimeProvider)
+    {
+        if (!entity.LockUntil.HasValue || entity.LockUntil.Value <= dateTimeProvider.UtcNow)
+            return;
+
+        transaction.Commit();
+        throw new LockedException(entity.LockUntil.Value);
+    }
+
+    public static T DecryptLevel2OrThrow<T>(
+        this SecureUser entity,
+        string entityStorageKey,
+        byte[] level1Key,
+        byte[] level2Key,
+        IEncryptionService encryption,
+        IStorageTransaction transaction,
+        IDateTimeProvider dateTimeProvider)
+    {
+        var decrypted = encryption.TryDecrypt<T>(entity.EncryptedLevel2, level2Key);
+
+        if (decrypted is not null)
+            return decrypted;
+
+        var failedAttempts = ++entity.FailedAttempts;
+        DateTime? lockedUntil = null;
+
+        if (failedAttempts >= 3)
+            lockedUntil = dateTimeProvider.UtcNow.AddMinutes(5);
+
+        entity.LockUntil = lockedUntil;
+        transaction.Put(entityStorageKey, encryption.Encrypt(entity, level1Key));
+        transaction.Commit();
+
+        if (lockedUntil is not null)
+            throw new LockedException(lockedUntil.Value);
+
+        throw new InvalidPasswordException(failedAttempts);
+    }
+}
