@@ -39,6 +39,7 @@ public class ChangePasswordCommandHandler(
             encryption,
             transaction,
             dateTimeProvider);
+        entity.FailedAttempts = 0;
 
         var level2Keys = level2.Level2Fields.ToDictionary(pair => pair.Value, pair => pair.Key);
         var level2FieldsKey = kdf.DeriveCompositeKey(vaultKey, level2.Secret.ToBytes(), command.OldPassword);

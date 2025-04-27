@@ -1,5 +1,6 @@
 using FastEndpoints;
 using Microsoft.AspNetCore.Mvc;
+using SecureStorage.API.Handlers;
 using SecureStorage.Core.Features.ChangePassword;
 using SecureStorage.Core.Features.CreateUser;
 using SecureStorage.Core.Features.GetFields;
@@ -24,6 +25,8 @@ builder.Services.AddScoped<UpdateUserCommandHandler>();
 builder.Services.AddScoped<ChangePasswordCommandHandler>();
 builder.Services.AddScoped<ResetPasswordCommandHandler>();
 
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -33,6 +36,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseExceptionHandler(_ => { });
+
 app.UseFastEndpoints();
 
 app.MapGet("/debug/rocksdb", ([FromServices] IKeyValueStorage keyValueStorage) =>

@@ -88,6 +88,7 @@ public class UpdateUserCommandHandler(
             entity.EncryptedLevel2 = encryption.Encrypt(level2, level2Key);
         }
 
+        entity.FailedAttempts = 0;
         var encryptedLevel1 = encryption.Encrypt(entity, level1Key);
 
         var batch = level1UpdatedFieldValues

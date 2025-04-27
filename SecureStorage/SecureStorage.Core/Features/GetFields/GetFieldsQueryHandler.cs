@@ -64,6 +64,13 @@ public class GetFieldsQueryHandler(
             transaction,
             dateTimeProvider);
 
+        if (entity.FailedAttempts > 0)
+        {
+            entity.FailedAttempts = 0;
+            var encryptedLevel1 = encryption.Encrypt(entity, level1Key);
+            transaction.Put(entityStorageKey, encryptedLevel1);
+        }
+
         var level2Keys = level2KeysQuery
             .Where(f => level2.Level2Fields.ContainsKey(f))
             .ToDictionary(f => level2.Level2Fields[f], f => f);
@@ -83,6 +90,7 @@ public class GetFieldsQueryHandler(
             }
         }
 
+        transaction.Commit();
         return result;
     }
 }
