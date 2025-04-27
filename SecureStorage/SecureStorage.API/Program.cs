@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using SecureStorage.Core.Features.ChangePassword;
 using SecureStorage.Core.Features.CreateUser;
 using SecureStorage.Core.Features.GetFields;
+using SecureStorage.Core.Features.ResetPassword;
 using SecureStorage.Core.Features.UpdateUser;
 using SecureStorage.Domain.Persistence;
 using SecureStorage.Infrastructure.ServiceExtensions;
@@ -21,6 +22,7 @@ builder.Services.AddScoped<CreateUserCommandHandler>();
 builder.Services.AddScoped<GetFieldsQueryHandler>();
 builder.Services.AddScoped<UpdateUserCommandHandler>();
 builder.Services.AddScoped<ChangePasswordCommandHandler>();
+builder.Services.AddScoped<ResetPasswordCommandHandler>();
 
 var app = builder.Build();
 
