@@ -39,7 +39,6 @@ public class CreateUserCommandHandler(
 
         var entity = new SecureUser
         {
-            UserId = command.UserId,
             CreatedAt = dateTimeProvider.UtcNow,
             LastAccessedAt = null,
             FailedAttempts = 0,

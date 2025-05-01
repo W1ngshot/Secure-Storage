@@ -1,9 +1,10 @@
 ﻿using FastEndpoints;
+using SecureStorage.API.Models;
 using SecureStorage.Core.Features.ResetPassword;
 
 namespace SecureStorage.API.Endpoints;
 
-public class ResetPasswordEndpoint(ResetPasswordCommandHandler commandHandler) : Endpoint<ResetPasswordCommand>
+public class ResetPasswordEndpoint(ResetPasswordCommandHandler commandHandler) : Endpoint<ResetPasswordRequest>
 {
     public override void Configure()
     {
@@ -12,9 +13,14 @@ public class ResetPasswordEndpoint(ResetPasswordCommandHandler commandHandler) :
         Summary(s => s.Summary = "Сброс пароля пользователя");
     }
 
-    public override async Task HandleAsync(ResetPasswordCommand req, CancellationToken ct)
+    public override async Task HandleAsync(ResetPasswordRequest req, CancellationToken ct)
     {
-        await commandHandler.HandleAsync(req);
-        await SendAsync(new { status = "reset" }, cancellation: ct);
+        await commandHandler.HandleAsync(new ResetPasswordCommand
+        {
+            UserId = req.UserId,
+            NewPassword = req.NewPassword
+        });
+        
+        await SendNoContentAsync(cancellation: ct);
     }
 }

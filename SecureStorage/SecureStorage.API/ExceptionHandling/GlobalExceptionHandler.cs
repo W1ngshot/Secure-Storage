@@ -1,8 +1,9 @@
 ﻿using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using SecureStorage.Domain.Exceptions;
+using SecureStorage.Domain.Exceptions.Codes;
 
-namespace SecureStorage.API.Handlers;
+namespace SecureStorage.API.ExceptionHandling;
 
 public class GlobalExceptionHandler : IExceptionHandler
 {
@@ -36,7 +37,7 @@ public class GlobalExceptionHandler : IExceptionHandler
         {
             Status = 500,
             Type = "https://httpstatuses.com/500",
-            Title = "error.internal",
+            Title = ErrorCodes.InternalError,
             Detail = "Internal server error",
             Instance = context.Request.Path
         };
