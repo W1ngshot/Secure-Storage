@@ -17,7 +17,7 @@ public class UpdateUserCommandHandler(
 {
     public async Task HandleAsync(UpdateUserCommand command)
     {
-        var vaultKey = await vault.GetKeyForUserAsync(command.UserId);
+        var vaultKey = await vault.GetUserKeyAsync(command.UserId);
         var entityStorageKey = keyGenerator.GenerateKeyFromUserId(vaultKey, command.UserId);
         var level1Key = kdf.DeriveUserKey(vaultKey, command.UserId);
 

@@ -17,7 +17,7 @@ public class ResetPasswordCommandHandler(
 {
     public async Task HandleAsync(ResetPasswordCommand command)
     {
-        var vaultKey = await vault.GetKeyForUserAsync(command.UserId);
+        var vaultKey = await vault.GetUserKeyAsync(command.UserId);
         var entityStorageKey = keyGenerator.GenerateKeyFromUserId(vaultKey, command.UserId);
         var level1Key = kdf.DeriveUserKey(vaultKey, command.UserId);
 

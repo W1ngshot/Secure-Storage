@@ -10,7 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddRocksDbStorage(builder.Configuration);
-builder.Services.AddKeyVault();
+builder.Services.AddKeyVault(builder.Configuration);
 builder.Services.AddUtilityServices();
 builder.Services.AddSecurityServices();
 builder.Services.AddFastEndpointsConfiguration();

@@ -21,5 +21,12 @@ public class KeyGenerator : IKeyGenerator
         return ToBase64(bytes);
     }
 
+    public byte[] GenerateRandomByteKey(int keySize = 32)
+    {
+        var bytes = new byte[keySize];
+        RandomNumberGenerator.Fill(bytes);
+        return bytes;
+    }
+
     private static string ToBase64(byte[] key) => Convert.ToBase64String(key);
 }

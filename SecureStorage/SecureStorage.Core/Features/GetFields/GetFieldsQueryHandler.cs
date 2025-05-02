@@ -17,7 +17,7 @@ public class GetFieldsQueryHandler(
 {
     public async Task<Dictionary<string, string?>> HandleAsync(GetFieldsQuery query)
     {
-        var vaultKey = await vault.GetKeyForUserAsync(query.UserId);
+        var vaultKey = await vault.GetUserKeyAsync(query.UserId);
         var entityStorageKey = keyGenerator.GenerateKeyFromUserId(vaultKey, query.UserId);
         var level1Key = kdf.DeriveUserKey(vaultKey, query.UserId);
 

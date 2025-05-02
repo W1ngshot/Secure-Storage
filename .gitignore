@@ -66,3 +66,9 @@ yarn-error.log
 
 # But not README.md file
 !/SecureStorage/data/rocksdb/README.md
+
+/docker/vault/data/*
+!/docker/vault/data/README.md
+
+/docker/vault/tls/*
+!/docker/vault/tls/README.md

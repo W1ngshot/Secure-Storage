@@ -16,6 +16,7 @@
       <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="8.0.0" />
       <PackageReference Include="RocksDbNative" Version="6.2.2" />
       <PackageReference Include="RocksDbSharp.Transactional" Version="1.0.1" />
+      <PackageReference Include="VaultSharp" Version="1.17.5.1" />
     </ItemGroup>
 
 </Project>

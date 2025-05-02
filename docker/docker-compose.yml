@@ -1,12 +1,15 @@
 services:
-  securestorage:
-    build: .
-    ports:
-      - "5000:80"
-    volumes:
-      - rocksdb-data:/data
+  vault:
+    image: hashicorp/vault:1.19
+    container_name: vault
+    restart: unless-stopped
     environment:
-      - ASPNETCORE_ENVIRONMENT=Production
-
-volumes:
-  rocksdb-data:
+      VAULT_ADDR: http://127.0.0.1:8200
+    ports:
+      - "8200:8200"
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - ./vault/data:/vault/data
+      - ./vault/config:/vault/config
+    command: vault server -config=/vault/config/vault.hcl

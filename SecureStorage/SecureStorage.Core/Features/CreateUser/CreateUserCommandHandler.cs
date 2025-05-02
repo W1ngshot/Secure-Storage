@@ -17,7 +17,9 @@ public class CreateUserCommandHandler(
 {
     public async Task HandleAsync(CreateUserCommand command)
     {
-        var vaultKey = await vault.GetKeyForUserAsync(command.UserId);
+        var vaultKey = keyGenerator.GenerateRandomByteKey();
+        await vault.CreateUserKeyAsync(command.UserId, vaultKey);
+        
         var entityKey = keyGenerator.GenerateKeyFromUserId(vaultKey, command.UserId);
         var level1Secret = keyGenerator.GenerateRandomKey();
         var level2Secret = keyGenerator.GenerateRandomKey();
