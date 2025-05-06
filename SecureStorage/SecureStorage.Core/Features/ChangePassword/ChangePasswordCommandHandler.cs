@@ -18,50 +18,58 @@ public class ChangePasswordCommandHandler(
     public async Task HandleAsync(ChangePasswordCommand command)
     {
         var vaultKey = await vault.GetUserKeyAsync(command.UserId);
-        var entityStorageKey = keyGenerator.GenerateKeyFromUserId(vaultKey, command.UserId);
+        var storageKey = keyGenerator.GenerateKeyFromUserId(vaultKey, command.UserId);
         var level1Key = kdf.DeriveUserKey(vaultKey, command.UserId);
+
+        var oldSecuredPassword = kdf.DeriveKey(command.OldPassword, command.UserId);
+        var newSecuredPassword = kdf.DeriveKey(command.NewPassword, command.UserId);
 
         using var transaction = storage.BeginTransaction();
 
-        var entity = transaction.GetAndDecryptOrThrow<SecureUser>(
-            entityStorageKey,
+        var level1 = transaction.GetAndDecryptOrThrow<Level1>(
+            storageKey,
             encryption,
             level1Key);
-        entity.LastAccessedAt = dateTimeProvider.UtcNow;
+        level1.LastAccessedAt = dateTimeProvider.UtcNow;
 
-        entity.EnsureNotLockedOrThrow(transaction, dateTimeProvider);
+        level1.EnsureNotLockedOrThrow(transaction, dateTimeProvider);
 
-        var level2Key = kdf.DeriveCompositeKey(vaultKey, entity.Secret.ToBytes(), command.OldPassword);
-        var level2 = entity.DecryptLevel2OrThrow<Level2>(
-            entityStorageKey,
+        var decryptedLevel1Secret = encryption.Decrypt(level1.Secret.FromBase64String(), vaultKey);
+        var oldLevel2Key = kdf.DeriveCompositeKey(decryptedLevel1Secret, oldSecuredPassword);
+        var level2 = level1.DecryptLevel2OrThrow<Level2>(
+            storageKey,
             level1Key,
-            level2Key,
+            oldLevel2Key,
             encryption,
             transaction,
             dateTimeProvider);
-        entity.FailedAttempts = 0;
+        level1.FailedAttempts = 0;
 
-        var level2Keys = level2.Level2Fields.ToDictionary(pair => pair.Value, pair => pair.Key);
-        var level2FieldsKey = kdf.DeriveCompositeKey(vaultKey, level2.Secret.ToBytes(), command.OldPassword);
-        var newLevel2FieldsKey = kdf.DeriveCompositeKey(vaultKey, level2.Secret.ToBytes(), command.NewPassword);
+        var decryptedLevel2Secret = encryption.Decrypt(level2.Secret.FromBase64String(), vaultKey);
 
-        var updatedLevel2Fields = transaction.GetBatch(level2Keys.Keys)
-            .Select(x => (StorageKey: x.Key, Data: encryption.TryDecrypt<string>(x.Value!, level2FieldsKey)))
-            .Where(x => !string.IsNullOrEmpty(x.Data))
-            .Select(x => (level2Keys[x.StorageKey], x.StorageKey, x.Data!))
-            .ToUpdatedEncryptedList(encryption, newLevel2FieldsKey);
+        var oldLevel2FieldsKey = kdf.DeriveCompositeKey(decryptedLevel2Secret, oldSecuredPassword);
+        var newLevel2FieldsKey = kdf.DeriveCompositeKey(decryptedLevel2Secret, newSecuredPassword);
 
-        var newLevel2Key = kdf.DeriveCompositeKey(vaultKey, entity.Secret.ToBytes(), command.NewPassword);
-        entity.EncryptedLevel2 = encryption.Encrypt(level2, newLevel2Key);
+        var onceDecryptedLevel2Fields = await vault.DecryptLabeledBatchAsync(command.UserId, level2.Level2Fields);
+        var reEncryptedLevel2Fields = onceDecryptedLevel2Fields
+            .Select(x =>
+                new KeyValuePair<string, string>(x.Key, encryption.Decrypt<string>(x.Value, oldLevel2FieldsKey)))
+            .ToEncryptedList(encryption, newLevel2FieldsKey);
+        var level2DoubleKeyEncryptedList =
+            await vault.EncryptLabeledBatchAsync(command.UserId, reEncryptedLevel2Fields.ToDictionary());
 
-        var encryptedLevel1 = encryption.Encrypt(entity, level1Key);
+        foreach (var kvp in level2DoubleKeyEncryptedList)
+        {
+            level2.Level2Fields[kvp.Key] = kvp.Value;
+        }
+        
+        var newLevel2Key = kdf.DeriveCompositeKey(decryptedLevel1Secret, newSecuredPassword);
+        
+        level1.EncryptedLevel2 = encryption.Encrypt(level2, newLevel2Key);
+        
+        var encryptedLevel1 = encryption.Encrypt(level1, level1Key);
 
-        var batch = updatedLevel2Fields
-            .Select(x => new KeyValuePair<string, string>(x.StorageKey, x.Data))
-            .Append(new KeyValuePair<string, string>(entityStorageKey, encryptedLevel1))
-            .ToDictionary();
-
-        transaction.PutBatch(batch);
+        transaction.Put(storageKey, encryptedLevel1);
         transaction.Commit();
     }
 }

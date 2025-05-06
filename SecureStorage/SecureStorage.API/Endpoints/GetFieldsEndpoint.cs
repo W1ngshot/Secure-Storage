@@ -4,7 +4,7 @@ using SecureStorage.Core.Features.GetFields;
 
 namespace SecureStorage.API.Endpoints;
 
-public class GetFieldsEndpoint(GetFieldsQueryHandler queryHandler) : Endpoint<GetFieldsRequest, Dictionary<string, string?>>
+public class GetFieldsEndpoint(GetFieldsQueryHandler queryHandler) : Endpoint<GetFieldsRequest, GetFieldsQueryResponse>
 {
     public override void Configure()
     {
@@ -18,7 +18,8 @@ public class GetFieldsEndpoint(GetFieldsQueryHandler queryHandler) : Endpoint<Ge
         var result = await queryHandler.HandleAsync(new GetFieldsQuery
         {
             UserId = req.UserId,
-            Fields = req.Fields,
+            Level1Fields = req.Level1Fields,
+            Level2Fields = req.Level2Fields,
             Password = req.Password
         });
         

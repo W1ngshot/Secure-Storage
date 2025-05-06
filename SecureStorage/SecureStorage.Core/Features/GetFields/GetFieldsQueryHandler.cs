@@ -15,82 +15,83 @@ public class GetFieldsQueryHandler(
     IKeyVault vault,
     IDateTimeProvider dateTimeProvider)
 {
-    public async Task<Dictionary<string, string?>> HandleAsync(GetFieldsQuery query)
+    public async Task<GetFieldsQueryResponse> HandleAsync(GetFieldsQuery query)
     {
         var vaultKey = await vault.GetUserKeyAsync(query.UserId);
-        var entityStorageKey = keyGenerator.GenerateKeyFromUserId(vaultKey, query.UserId);
+        var storageKey = keyGenerator.GenerateKeyFromUserId(vaultKey, query.UserId);
         var level1Key = kdf.DeriveUserKey(vaultKey, query.UserId);
 
-        var result = query.Fields.ToDictionary(x => x, _ => default(string));
+        var response = new GetFieldsQueryResponse(query.Level1Fields, query.Level2Fields);
 
         using var transaction = storage.BeginTransaction();
 
-        var entity = transaction.GetAndDecryptOrThrow<SecureUser>(
-            entityStorageKey,
+        var level1 = transaction.GetAndDecryptOrThrow<Level1>(
+            storageKey,
             encryption,
             level1Key);
-        entity.LastAccessedAt = dateTimeProvider.UtcNow;
-        
-        var level1Keys = query.Fields
-            .Where(f => entity.Level1Fields.ContainsKey(f))
-            .ToDictionary(f => entity.Level1Fields[f], f => f);
+        level1.LastAccessedAt = dateTimeProvider.UtcNow;
 
-        if (level1Keys.Count != 0)
+        var requiredLevel1Fields = level1.Level1Fields
+            .Where(kvp => query.Level1Fields.Contains(kvp.Key))
+            .ToDictionary();
+
+        var decryptedLevel1Secret = encryption.Decrypt(level1.Secret.FromBase64String(), vaultKey);
+        if (requiredLevel1Fields.Count != 0)
         {
-            var level1Values = transaction.GetBatch(level1Keys.Keys);
+            var onceDecryptedLevel1Fields = await vault.DecryptLabeledBatchAsync(query.UserId, requiredLevel1Fields);
+            var level1FieldsKey = kdf.DeriveCompositeKey(vaultKey, decryptedLevel1Secret);
 
-            if (level1Values.Any(x => x.Value is not null))
+            foreach (var level1Field in onceDecryptedLevel1Fields)
             {
-                var level1FieldsKey = kdf.DeriveCompositeKey(vaultKey, entity.Secret.ToBytes());
-                foreach (var pair in level1Values.Where(x => x.Value is not null))
-                {
-                    result[level1Keys[pair.Key]] = encryption.TryDecrypt<string>(pair.Value!, level1FieldsKey);
-                }
+                response.Level1Fields[level1Field.Key] = encryption.Decrypt<string>(level1Field.Value, level1FieldsKey);
             }
         }
 
-        var level2KeysQuery = query.Fields.Except(level1Keys.Values).ToList();
-        if (query.Password is null || level2KeysQuery.Count <= 0)
-            return result;
+        if (query.Password is null || query.Level2Fields.Length <= 0)
+        {
+            var encryptedLevel1 = encryption.Encrypt(level1, level1Key);
+            transaction.Put(storageKey, encryptedLevel1);
+            transaction.Commit();
+            return response;
+        }
 
-        entity.EnsureNotLockedOrThrow(transaction, dateTimeProvider);
-        
-        var level2Key = kdf.DeriveCompositeKey(vaultKey, entity.Secret.ToBytes(), query.Password);
-        var level2 = entity.DecryptLevel2OrThrow<Level2>(
-            entityStorageKey,
+        level1.EnsureNotLockedOrThrow(transaction, dateTimeProvider);
+
+        var securedPassword = kdf.DeriveKey(query.Password, query.UserId);
+        var level2Key = kdf.DeriveCompositeKey(decryptedLevel1Secret, securedPassword);
+
+        var level2 = level1.DecryptLevel2OrThrow<Level2>(
+            storageKey,
             level1Key,
             level2Key,
             encryption,
             transaction,
             dateTimeProvider);
 
-        if (entity.FailedAttempts > 0)
+        if (level1.FailedAttempts > 0)
         {
-            entity.FailedAttempts = 0;
-            var encryptedLevel1 = encryption.Encrypt(entity, level1Key);
-            transaction.Put(entityStorageKey, encryptedLevel1);
+            level1.FailedAttempts = 0;
         }
 
-        var level2Keys = level2KeysQuery
-            .Where(f => level2.Level2Fields.ContainsKey(f))
-            .ToDictionary(f => level2.Level2Fields[f], f => f);
+        var requiredLevel2Fields = level2.Level2Fields
+            .Where(kvp => query.Level2Fields.Contains(kvp.Key))
+            .ToDictionary();
 
-        if (level2Keys.Count != 0)
+        if (requiredLevel2Fields.Count != 0)
         {
-            var level2Values = transaction.GetBatch(level2Keys.Keys);
+            var onceDecryptedLevel2Fields = await vault.DecryptLabeledBatchAsync(query.UserId, requiredLevel2Fields);
+            var decryptedLevel2Secret = encryption.Decrypt(level2.Secret.FromBase64String(), vaultKey);
+            var level2FieldsKey = kdf.DeriveCompositeKey(decryptedLevel2Secret, securedPassword);
 
-            if (level2Values.Any(x => x.Value is not null))
+            foreach (var level2Field in onceDecryptedLevel2Fields)
             {
-                var level2FieldsKey = kdf.DeriveCompositeKey(vaultKey, level2.Secret.ToBytes(), query.Password);
-
-                foreach (var pair in level2Values.Where(x => x.Value is not null))
-                {
-                    result[level2Keys[pair.Key]] = encryption.TryDecrypt<string>(pair.Value!, level2FieldsKey);
-                }
+                response.Level2Fields[level2Field.Key] = encryption.Decrypt<string>(level2Field.Value, level2FieldsKey);
             }
         }
 
+        var encryptedEntity = encryption.Encrypt(level1, level1Key);
+        transaction.Put(storageKey, encryptedEntity);
         transaction.Commit();
-        return result;
+        return response;
     }
 }

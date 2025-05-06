@@ -9,7 +9,7 @@ namespace SecureStorage.Core.Extensions;
 public static class EntityExtensions
 {
     public static void EnsureNotLockedOrThrow(
-        this SecureUser entity,
+        this Level1 entity,
         IStorageTransaction transaction,
         IDateTimeProvider dateTimeProvider)
     {
@@ -21,8 +21,8 @@ public static class EntityExtensions
     }
 
     public static T DecryptLevel2OrThrow<T>(
-        this SecureUser entity,
-        string entityStorageKey,
+        this Level1 entity,
+        string storageKey,
         byte[] level1Key,
         byte[] level2Key,
         IEncryptionService encryption,
@@ -41,7 +41,7 @@ public static class EntityExtensions
             lockedUntil = dateTimeProvider.UtcNow.AddMinutes(5);
 
         entity.LockUntil = lockedUntil;
-        transaction.Put(entityStorageKey, encryption.Encrypt(entity, level1Key));
+        transaction.Put(storageKey, encryption.Encrypt(entity, level1Key));
         transaction.Commit();
 
         if (lockedUntil is not null)

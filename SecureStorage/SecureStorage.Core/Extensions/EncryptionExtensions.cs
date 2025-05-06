@@ -6,16 +6,14 @@ namespace SecureStorage.Core.Extensions;
 
 public static class EncryptionExtensions
 {
-    public static List<(string Key, string StorageKey, string Data)> ToEncryptedList(
+    public static List<(string Key, string Data)> ToEncryptedList(
         this IEnumerable<KeyValuePair<string, string>> fields,
-        IKeyGenerator keyGenerator,
         IEncryptionService encryption,
         byte[] levelKey)
     {
         return fields
             .Select(field => (
                 Key: field.Key,
-                StorageKey: keyGenerator.GenerateRandomKey(),
                 Data: encryption.Encrypt(field.Value, levelKey)))
             .ToList();
     }

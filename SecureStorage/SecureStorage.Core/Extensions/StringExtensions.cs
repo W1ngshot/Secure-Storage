@@ -20,4 +20,14 @@ public static class StringExtensions
     {
         return Encoding.UTF8.GetString(bytes);
     }
+
+    public static byte[] FromBase64String(this string base64)
+    {
+        return Convert.FromBase64String(base64);
+    }
+
+    public static string ToBase64String(this byte[] bytes)
+    {
+        return Convert.ToBase64String(bytes);
+    }
 }
