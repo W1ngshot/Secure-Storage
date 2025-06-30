@@ -27,7 +27,6 @@ public class UpdateUserCommandHandler(
             storageKey,
             encryption,
             level1Key);
-        level1.LastAccessedAt = dateTimeProvider.UtcNow;
 
         var decryptedLevel1Secret = encryption.Decrypt(level1.Secret.FromBase64String(), vaultKey);
         var level1FieldsKey = kdf.DeriveCompositeKey(vaultKey, decryptedLevel1Secret);

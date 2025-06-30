@@ -49,7 +49,6 @@ public class CreateUserCommandHandler(
         var level1 = new Level1
         {
             CreatedAt = dateTimeProvider.UtcNow,
-            LastAccessedAt = null,
             FailedAttempts = 0,
             LockUntil = null,
             Secret = encryption.Encrypt(level1Secret, vaultKey).ToBase64String(),

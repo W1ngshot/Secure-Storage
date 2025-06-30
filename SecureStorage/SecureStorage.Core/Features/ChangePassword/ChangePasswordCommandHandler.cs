@@ -30,7 +30,6 @@ public class ChangePasswordCommandHandler(
             storageKey,
             encryption,
             level1Key);
-        level1.LastAccessedAt = dateTimeProvider.UtcNow;
 
         level1.EnsureNotLockedOrThrow(transaction, dateTimeProvider);
 

@@ -3,7 +3,6 @@
 public class Level1
 {
     public required DateTime CreatedAt { get; init; }
-    public DateTime? LastAccessedAt { get; set; }
     public int FailedAttempts { get; set; }
     public DateTime? LockUntil { get; set; }
     public required string Secret { get; init; }

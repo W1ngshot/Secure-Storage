@@ -39,7 +39,6 @@ public class ResetPasswordCommandHandler(
         };
 
         level1.EncryptedLevel2 = encryption.Encrypt(newLevel2, newLevel2Key);
-        level1.LastAccessedAt = dateTimeProvider.UtcNow;
         level1.LockUntil = null;
         level1.FailedAttempts = 0;
 

@@ -29,7 +29,6 @@ public class GetFieldsQueryHandler(
             storageKey,
             encryption,
             level1Key);
-        level1.LastAccessedAt = dateTimeProvider.UtcNow;
 
         var requiredLevel1Fields = level1.Level1Fields
             .Where(kvp => query.Level1Fields.Contains(kvp.Key))
