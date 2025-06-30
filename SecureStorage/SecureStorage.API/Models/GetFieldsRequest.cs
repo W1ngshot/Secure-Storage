@@ -1,8 +1,9 @@
-﻿namespace SecureStorage.API.Models;
+﻿using SecureStorage.API.Models.Base;
 
-public class GetFieldsRequest
+namespace SecureStorage.API.Models;
+
+public class GetFieldsRequest : BaseRequest
 {
-    public required string UserId { get; init; }
     public string? Password { get; init; }
     public required string[] Level1Fields { get; init; }
     public required string[] Level2Fields { get; init; }

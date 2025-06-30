@@ -1,7 +1,8 @@
-﻿namespace SecureStorage.API.Models;
+﻿using SecureStorage.API.Models.Base;
 
-public class ResetPasswordRequest
+namespace SecureStorage.API.Models;
+
+public class ResetPasswordRequest : BaseRequest
 {
-    public required string UserId { get; init; }
     public required string NewPassword { get; init; }
 }

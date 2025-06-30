@@ -1,8 +1,9 @@
-﻿namespace SecureStorage.API.Models;
+﻿using SecureStorage.API.Models.Base;
 
-public class CreateUserRequest
+namespace SecureStorage.API.Models;
+
+public class CreateUserRequest : BaseRequest
 {
-    public required string UserId { get; init; }
     public required Dictionary<string, string> Level1Fields { get; init; }
     public required Dictionary<string, string> Level2Fields { get; init; }
     public required string Password { get; init; }

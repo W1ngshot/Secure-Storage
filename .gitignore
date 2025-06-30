@@ -71,4 +71,5 @@ yarn-error.log
 !/docker/vault/data/README.md
 
 /docker/vault/tls/*
+/docker/data/
 !/docker/vault/tls/README.md
