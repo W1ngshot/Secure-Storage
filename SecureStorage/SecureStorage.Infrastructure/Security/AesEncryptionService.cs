@@ -9,31 +9,32 @@ public class AesEncryptionService : IEncryptionService
 {
     public byte[] Encrypt(byte[] plainData, byte[] key)
     {
-        using var aes = Aes.Create();
-        aes.Key = key;
-        aes.GenerateIV();
-        aes.Mode = CipherMode.CBC;
-        aes.Padding = PaddingMode.PKCS7;
+        using var gcm = new AesGcm(key, AesGcm.TagByteSizes.MaxSize);
+        var nonce = new byte[AesGcm.NonceByteSizes.MaxSize];
+        RandomNumberGenerator.Fill(nonce);
 
-        using var encryptor = aes.CreateEncryptor();
-        var cipher = encryptor.TransformFinalBlock(plainData, 0, plainData.Length);
+        var ciphertext = new byte[plainData.Length];
+        var tag = new byte[AesGcm.TagByteSizes.MaxSize];
 
-        return aes.IV.Concat(cipher).ToArray();
+        gcm.Encrypt(nonce, plainData, ciphertext, tag);
+
+        return nonce.Concat(ciphertext).Concat(tag).ToArray();
     }
 
     public byte[] Decrypt(byte[] cipherData, byte[] key)
     {
-        using var aes = Aes.Create();
-        aes.Key = key;
-        aes.Mode = CipherMode.CBC;
-        aes.Padding = PaddingMode.PKCS7;
+        var nonce = cipherData.Take(AesGcm.NonceByteSizes.MaxSize).ToArray();
+        var ciphertext = cipherData
+            .Skip(AesGcm.NonceByteSizes.MaxSize)
+            .Take(cipherData.Length - AesGcm.NonceByteSizes.MaxSize - AesGcm.TagByteSizes.MaxSize).ToArray();
+        var tag = cipherData.Skip(cipherData.Length - AesGcm.TagByteSizes.MaxSize).ToArray();
 
-        var iv = cipherData.Take(16).ToArray();
-        var actualCipher = cipherData.Skip(16).ToArray();
+        using var gcm = new AesGcm(key, AesGcm.TagByteSizes.MaxSize);
+        var plaintextBytes = new byte[ciphertext.Length];
 
-        aes.IV = iv;
-        using var decryptor = aes.CreateDecryptor();
-        return decryptor.TransformFinalBlock(actualCipher, 0, actualCipher.Length);
+        gcm.Decrypt(nonce, ciphertext, tag, plaintextBytes);
+
+        return plaintextBytes;
     }
 
     public string Encrypt<T>(T plainText, byte[] key)
