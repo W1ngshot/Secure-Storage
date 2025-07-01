@@ -1,5 +1,5 @@
 ﻿using RocksDbSharp;
-using SecureStorage.Domain.Persistence;
+using SecureStorage.Core.Interfaces.Persistence;
 
 namespace SecureStorage.Infrastructure.Persistence;
 

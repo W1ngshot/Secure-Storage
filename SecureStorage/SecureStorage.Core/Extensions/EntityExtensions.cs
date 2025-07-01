@@ -1,8 +1,8 @@
-﻿using SecureStorage.Domain.Entities;
+﻿using SecureStorage.Core.Interfaces.Persistence;
+using SecureStorage.Core.Interfaces.Security;
+using SecureStorage.Core.Interfaces.Utility;
+using SecureStorage.Domain.Entities;
 using SecureStorage.Domain.Exceptions;
-using SecureStorage.Domain.Persistence;
-using SecureStorage.Domain.Security;
-using SecureStorage.Domain.Utility;
 
 namespace SecureStorage.Core.Extensions;
 

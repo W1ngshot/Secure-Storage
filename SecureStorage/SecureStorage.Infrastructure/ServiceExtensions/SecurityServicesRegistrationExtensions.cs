@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using SecureStorage.Domain.Security;
+using SecureStorage.Core.Interfaces.Security;
 using SecureStorage.Infrastructure.Security;
 
 namespace SecureStorage.Infrastructure.ServiceExtensions;

@@ -7,7 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\SecureStorage.Domain\SecureStorage.Domain.csproj" />
+      <ProjectReference Include="..\SecureStorage.Core\SecureStorage.Core.csproj" />
     </ItemGroup>
 
     <ItemGroup>

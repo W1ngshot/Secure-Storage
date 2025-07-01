@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using SecureStorage.Domain.Vault;
+using SecureStorage.Core.Interfaces.Vault;
 using SecureStorage.Infrastructure.Options;
 using SecureStorage.Infrastructure.Vault;
 using VaultSharp;

@@ -1,7 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using SecureStorage.Domain.Security;
+using SecureStorage.Core.Interfaces.Security;
 
 namespace SecureStorage.Infrastructure.Security;
 

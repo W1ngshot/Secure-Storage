@@ -1,4 +1,4 @@
-﻿namespace SecureStorage.Domain.Utility;
+﻿namespace SecureStorage.Core.Interfaces.Utility;
 
 public interface IDateTimeProvider
 {

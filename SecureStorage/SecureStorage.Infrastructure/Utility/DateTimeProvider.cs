@@ -1,4 +1,4 @@
-﻿using SecureStorage.Domain.Utility;
+﻿using SecureStorage.Core.Interfaces.Utility;
 
 namespace SecureStorage.Infrastructure.Utility;
 

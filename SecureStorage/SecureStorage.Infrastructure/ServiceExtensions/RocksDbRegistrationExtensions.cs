@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using SecureStorage.Domain.Persistence;
+using SecureStorage.Core.Interfaces.Persistence;
 using SecureStorage.Infrastructure.Options;
 using SecureStorage.Infrastructure.Persistence;
 

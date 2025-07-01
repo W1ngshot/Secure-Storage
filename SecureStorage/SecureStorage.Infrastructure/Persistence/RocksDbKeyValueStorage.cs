@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using Microsoft.Extensions.Options;
 using RocksDbSharp;
-using SecureStorage.Domain.Persistence;
+using SecureStorage.Core.Interfaces.Persistence;
 using SecureStorage.Infrastructure.Options;
 
 namespace SecureStorage.Infrastructure.Persistence;

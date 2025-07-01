@@ -4,7 +4,7 @@ using SecureStorage.API.ExceptionHandling;
 using SecureStorage.API.Middleware;
 using SecureStorage.API.Processors;
 using SecureStorage.API.ServiceExtensions;
-using SecureStorage.Domain.Persistence;
+using SecureStorage.Core.Interfaces.Persistence;
 using SecureStorage.Infrastructure.ServiceExtensions;
 
 var builder = WebApplication.CreateBuilder(args);

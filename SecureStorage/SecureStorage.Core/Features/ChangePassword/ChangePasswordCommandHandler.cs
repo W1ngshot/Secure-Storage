@@ -1,9 +1,9 @@
 ﻿using SecureStorage.Core.Extensions;
+using SecureStorage.Core.Interfaces.Persistence;
+using SecureStorage.Core.Interfaces.Security;
+using SecureStorage.Core.Interfaces.Utility;
+using SecureStorage.Core.Interfaces.Vault;
 using SecureStorage.Domain.Entities;
-using SecureStorage.Domain.Persistence;
-using SecureStorage.Domain.Security;
-using SecureStorage.Domain.Utility;
-using SecureStorage.Domain.Vault;
 
 namespace SecureStorage.Core.Features.ChangePassword;
 

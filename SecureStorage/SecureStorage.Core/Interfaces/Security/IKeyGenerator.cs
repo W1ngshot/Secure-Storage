@@ -1,4 +1,4 @@
-﻿namespace SecureStorage.Domain.Security;
+﻿namespace SecureStorage.Core.Interfaces.Security;
 
 public interface IKeyGenerator
 {

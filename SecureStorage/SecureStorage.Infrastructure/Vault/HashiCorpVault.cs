@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using System.Text.Json;
+using SecureStorage.Core.Interfaces.Vault;
 using SecureStorage.Domain.Exceptions;
-using SecureStorage.Domain.Vault;
 using VaultSharp;
 using VaultSharp.Core;
 using VaultSharp.V1.SecretsEngines.Transit;

@@ -1,4 +1,4 @@
-﻿namespace SecureStorage.Domain.Persistence;
+﻿namespace SecureStorage.Core.Interfaces.Persistence;
 
 public interface IStorageTransaction : IDisposable
 {

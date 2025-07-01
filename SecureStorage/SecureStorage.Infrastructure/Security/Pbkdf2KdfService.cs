@@ -1,6 +1,6 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
-using SecureStorage.Domain.Security;
+using SecureStorage.Core.Interfaces.Security;
 
 namespace SecureStorage.Infrastructure.Security;
 

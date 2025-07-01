@@ -1,4 +1,4 @@
-﻿namespace SecureStorage.Domain.Vault;
+﻿namespace SecureStorage.Core.Interfaces.Vault;
 
 public interface IKeyVault
 {
