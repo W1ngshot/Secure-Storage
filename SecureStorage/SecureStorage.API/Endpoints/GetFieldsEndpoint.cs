@@ -8,7 +8,7 @@ public class GetFieldsEndpoint(GetFieldsQueryHandler queryHandler) : Endpoint<Ge
 {
     public override void Configure()
     {
-        Post("/users/fields");
+        Post("/api/users/fields");
         AllowAnonymous();
         Summary(s => s.Summary = "Получить выбранные поля пользователя");
     }

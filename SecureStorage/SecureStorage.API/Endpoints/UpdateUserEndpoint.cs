@@ -8,7 +8,7 @@ public class UpdateUserEndpoint(UpdateUserCommandHandler commandHandler) : Endpo
 {
     public override void Configure()
     {
-        Put("/users");
+        Put("/api/users");
         AllowAnonymous();
         Summary(s => s.Summary = "Обновление данных пользователя");
     }

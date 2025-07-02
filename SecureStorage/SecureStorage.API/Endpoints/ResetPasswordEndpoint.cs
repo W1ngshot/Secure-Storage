@@ -8,7 +8,7 @@ public class ResetPasswordEndpoint(ResetPasswordCommandHandler commandHandler) :
 {
     public override void Configure()
     {
-        Post("/password/reset");
+        Post("/api/password/reset");
         AllowAnonymous();
         Summary(s => s.Summary = "Сброс пароля пользователя");
     }

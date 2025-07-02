@@ -8,7 +8,7 @@ public class CreateUserEndpoint(CreateUserCommandHandler commandHandler) : Endpo
 {
     public override void Configure()
     {
-        Post("/users");
+        Post("/api/users");
         AllowAnonymous();
         Summary(s => s.Summary = "Создание нового пользователя");
     }

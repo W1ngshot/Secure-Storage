@@ -20,7 +20,7 @@ public class ChangePasswordEndpoint(ChangePasswordCommandHandler commandHandler)
 
     public override void Configure()
     {
-        Post("/password/change");
+        Post("/api/password/change");
         AllowAnonymous();
 
         Summary(s =>
